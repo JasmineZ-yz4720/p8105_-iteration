@@ -42,3 +42,109 @@ z_score(x = rnorm(10, mean = 5))
 #z_score(c(TRUE, TRUE, FALSE))
 ```
 
+### Multiple outputs
+Write a function that returns the mean and sd from a sample of numbers
+```{r}
+mean_and_sd = function(x){
+  if(!is.numeric(x)){
+    stop("Argument should be numbers")
+  }else if(length(x)<2){
+    stop("You need at least 2 numbers to get z scores")
+  }
+  mean_x = mean(x)
+  sd_x = sd(x)
+  
+  tibble(
+    mean = mean_x,
+    sd = sd_x
+  ) #return two values instead of the last line
+}
+```
+
+```{r}
+mean_and_sd(x_vec)
+```
+
+### Start getting means and sds
+```{r}
+x_vec = rnorm(30, 5, 0.5)
+tibble(
+  mean = mean(x_vec),
+  sd = sd(x_vec)
+)
+```
+
+Write a function that uses `n`, a true mean, and true sd for inputs.
+```{r}
+sim_mean_sd = function(n, mu, sigma){
+  x_vec = rnorm(n, mu, sigma)
+  tibble(
+  mean = mean(x_vec),
+  sd = sd(x_vec)
+)
+}
+
+sim_mean_sd(30, 5, 0.5)
+sim_mean_sd(30, 50, 12.5)
+```
+
+# LoTR datasets revisit
+```{r}
+lotr_df_process = function(link, range, title){
+  df =  readxl::read_excel(link, range = range) |>
+  mutate(movie = title) |> 
+  janitor::clean_names() |>
+  gather(key = sex, value = words, female:male) |>
+  mutate(race = str_to_lower(race)) |> 
+  select(movie, everything()) 
+  
+  df
+}
+```
+
+```{r}
+lotr_tidy = 
+  bind_rows(
+    lotr_df_process("data/LotR_Words.xlsx", "B3:D6", "fellowship_ring"),
+    lotr_df_process("data/LotR_Words.xlsx", "F3:H6", "two_towers"),
+    lotr_df_process("data/LotR_Words.xlsx", "J3:L6", "return_king")) |>
+  select(movie, everything()) 
+```
+
+# NSDUH dataset revist
+```{r}
+nsduh_url = "http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm"
+nsduh_html = read_html(nsduh_url)
+
+#we want to see different tables from the same page instead of just mrj
+nsduh_table <- function(html, table_num, table_name) {
+  
+  table = 
+    html |> 
+    html_table() |> 
+    nth(table_num) |>
+    slice(-1) |> 
+    select(-contains("P Value")) |>
+    pivot_longer(
+      -State,
+      names_to = "age_year", 
+      values_to = "percent") |>
+    separate(age_year, into = c("age", "year"), sep = "\\(") |>
+    mutate(
+      year = str_replace(year, "\\)", ""),
+      percent = str_replace(percent, "[a-c]$", ""),
+      percent = as.numeric(percent),
+      name = table_name) |>
+    filter(!(State %in% c("Total U.S.", "Northeast", "Midwest", "South", "West")))
+}
+```
+
+```{r}
+nsduh_results = 
+  bind_rows(
+    nsduh_table(nsduh_html, 1, "marj_one_year"),
+    nsduh_table(nsduh_html, 4, "cocaine_one_year"),
+    nsduh_table(nsduh_html, 5, "heroin_one_year")
+  )
+```
+

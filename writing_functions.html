@@ -390,6 +390,114 @@ display: none;
 #z_score(c(&quot;my&quot;, &quot;name&quot;)) doesn&#39;t work on character vector
 #z_score(c(TRUE, TRUE, FALSE))</code></pre>
 </div>
+<div id="multiple-outputs" class="section level3">
+<h3>Multiple outputs</h3>
+<p>Write a function that returns the mean and sd from a sample of
+numbers</p>
+<pre class="r"><code>mean_and_sd = function(x){
+  if(!is.numeric(x)){
+    stop(&quot;Argument should be numbers&quot;)
+  }else if(length(x)&lt;2){
+    stop(&quot;You need at least 2 numbers to get z scores&quot;)
+  }
+  mean_x = mean(x)
+  sd_x = sd(x)
+  
+  tibble(
+    mean = mean_x,
+    sd = sd_x
+  ) #return two values instead of the last line
+}</code></pre>
+<pre class="r"><code>mean_and_sd(x_vec)</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  5.06 0.274</code></pre>
+</div>
+<div id="start-getting-means-and-sds" class="section level3">
+<h3>Start getting means and sds</h3>
+<pre class="r"><code>x_vec = rnorm(30, 5, 0.5)
+tibble(
+  mean = mean(x_vec),
+  sd = sd(x_vec)
+)</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  5.07 0.398</code></pre>
+<p>Write a function that uses <code>n</code>, a true mean, and true sd
+for inputs.</p>
+<pre class="r"><code>sim_mean_sd = function(n, mu, sigma){
+  x_vec = rnorm(n, mu, sigma)
+  tibble(
+  mean = mean(x_vec),
+  sd = sd(x_vec)
+)
+}
+
+sim_mean_sd(30, 5, 0.5)</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  5.06 0.480</code></pre>
+<pre class="r"><code>sim_mean_sd(30, 50, 12.5)</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  51.4  11.0</code></pre>
+</div>
+</div>
+<div id="lotr-datasets-revisit" class="section level1">
+<h1>LoTR datasets revisit</h1>
+<pre class="r"><code>lotr_df_process = function(link, range, title){
+  df =  readxl::read_excel(link, range = range) |&gt;
+  mutate(movie = title) |&gt; 
+  janitor::clean_names() |&gt;
+  gather(key = sex, value = words, female:male) |&gt;
+  mutate(race = str_to_lower(race)) |&gt; 
+  select(movie, everything()) 
+  
+  df
+}</code></pre>
+<pre class="r"><code>lotr_tidy = 
+  bind_rows(
+    lotr_df_process(&quot;data/LotR_Words.xlsx&quot;, &quot;B3:D6&quot;, &quot;fellowship_ring&quot;),
+    lotr_df_process(&quot;data/LotR_Words.xlsx&quot;, &quot;F3:H6&quot;, &quot;two_towers&quot;),
+    lotr_df_process(&quot;data/LotR_Words.xlsx&quot;, &quot;J3:L6&quot;, &quot;return_king&quot;)) |&gt;
+  select(movie, everything()) </code></pre>
+</div>
+<div id="nsduh-dataset-revist" class="section level1">
+<h1>NSDUH dataset revist</h1>
+<pre class="r"><code>nsduh_url = &quot;http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm&quot;
+nsduh_html = read_html(nsduh_url)
+
+#we want to see different tables from the same page instead of just mrj
+nsduh_table &lt;- function(html, table_num, table_name) {
+  
+  table = 
+    html |&gt; 
+    html_table() |&gt; 
+    nth(table_num) |&gt;
+    slice(-1) |&gt; 
+    select(-contains(&quot;P Value&quot;)) |&gt;
+    pivot_longer(
+      -State,
+      names_to = &quot;age_year&quot;, 
+      values_to = &quot;percent&quot;) |&gt;
+    separate(age_year, into = c(&quot;age&quot;, &quot;year&quot;), sep = &quot;\\(&quot;) |&gt;
+    mutate(
+      year = str_replace(year, &quot;\\)&quot;, &quot;&quot;),
+      percent = str_replace(percent, &quot;[a-c]$&quot;, &quot;&quot;),
+      percent = as.numeric(percent),
+      name = table_name) |&gt;
+    filter(!(State %in% c(&quot;Total U.S.&quot;, &quot;Northeast&quot;, &quot;Midwest&quot;, &quot;South&quot;, &quot;West&quot;)))
+}</code></pre>
+<pre class="r"><code>nsduh_results = 
+  bind_rows(
+    nsduh_table(nsduh_html, 1, &quot;marj_one_year&quot;),
+    nsduh_table(nsduh_html, 4, &quot;cocaine_one_year&quot;),
+    nsduh_table(nsduh_html, 5, &quot;heroin_one_year&quot;)
+  )</code></pre>
 </div>
 
 
