@@ -1,0 +1,13 @@
+---
+title: "writing_functions"
+author: "Jasmine Zhang"
+date: "2023-10-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rvest)
+set.seed(1)
+```
+
