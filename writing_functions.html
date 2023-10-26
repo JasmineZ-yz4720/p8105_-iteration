@@ -357,7 +357,40 @@ display: none;
 </div>
 
 
-
+<div id="my-first-function" class="section level1">
+<h1>My first function</h1>
+<div id="z-score-function" class="section level3">
+<h3>Z score function</h3>
+<p>Z scores subtract the mean and divide by the sd.</p>
+<pre class="r"><code>x_vec = rnorm(20, mean = 5, sd = 0.3)
+#compute z score for x_vec
+(x_vec - mean(x_vec))/sd(x_vec)</code></pre>
+<pre><code>##  [1] -0.894579096 -0.007534108 -1.123622566  1.538189109  0.152185414
+##  [6] -1.107022329  0.325106999  0.599834216  0.421851526 -0.543016965
+## [11]  1.446758183  0.218251901 -0.888870682 -2.633686248  1.023162590
+## [16] -0.257822640 -0.226349080  0.824866429  0.690604708  0.441692638</code></pre>
+<pre class="r"><code>z_score = function(x){
+  if(!is.numeric(x)){
+    stop(&quot;Argument should be numbers&quot;)
+  }else if(length(x)&lt;2){
+    stop(&quot;You need at least 2 numbers to get z scores&quot;)
+  }
+  z = (x-mean(x))/sd(x)
+  z
+}</code></pre>
+<pre class="r"><code>z_score(x = x_vec)</code></pre>
+<pre><code>##  [1] -0.894579096 -0.007534108 -1.123622566  1.538189109  0.152185414
+##  [6] -1.107022329  0.325106999  0.599834216  0.421851526 -0.543016965
+## [11]  1.446758183  0.218251901 -0.888870682 -2.633686248  1.023162590
+## [16] -0.257822640 -0.226349080  0.824866429  0.690604708  0.441692638</code></pre>
+<pre class="r"><code>z_score(x = rnorm(10, mean = 5))</code></pre>
+<pre><code>##  [1]  1.10155110  0.95835313  0.21791185 -1.94188329  0.78850250  0.08114680
+##  [7] -0.02314995 -1.39919264 -0.36047935  0.57723986</code></pre>
+<pre class="r"><code>#z_score(x=3) now send the error message
+#z_score(c(&quot;my&quot;, &quot;name&quot;)) doesn&#39;t work on character vector
+#z_score(c(TRUE, TRUE, FALSE))</code></pre>
+</div>
+</div>
 
 
 
