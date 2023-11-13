@@ -1,0 +1,13 @@
+---
+title: "simulation"
+author: "Jasmine Zhang"
+date: "2023-11-2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+
+set.seed(1)
+```
+
