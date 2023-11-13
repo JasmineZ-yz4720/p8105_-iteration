@@ -7,7 +7,89 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-
 set.seed(1)
+```
+
+Repeated sampling
+
+```{r}
+sim_mean_sd = function(n_obs, mu = 5, sigma = 1){
+  x_vec = rnorm(n = n_obs, mean = mu, sd = sigma)
+  tibble(
+  mean = mean(x_vec),
+  sd = sd(x_vec)
+)
+}
+
+output = vector("list", length = 100)
+for (i in 1:100) {
+  output[[i]] = sim_mean_sd(n_obs = 30)
+}
+
+sim_results = bind_rows(output)
+sim_results |> 
+  ggplot(aes(x = mean))+
+  geom_density()
+
+sim_results |> 
+  summarise(mu_hat = mean(mean),
+            sd_hat = sd(mean))
+```
+
+use a map function
+```{r}
+sim_results_df = 
+  expand_grid(
+    sample_size = c(30, 60, 120, 240),
+    iter = 1:1000
+  ) |> 
+  mutate(estimate_df = map(sample_size, sim_mean_sd)) |> 
+  unnest(estimate_df)
+
+sim_results_df |> 
+  mutate(
+    sample_size = str_c("n = ", sample_size),
+    sample_size = fct_inorder(sample_size)
+  ) |> 
+  ggplot(aes(x = sample_size, y = mean)) +
+  geom_boxplot()
+```
+
+Simulation regression: goal is to write a function that simulates data and then fits a regression, then repeat to look at the distribution of estimated coefficients
+
+```{r}
+sim_regression = function(n, beta0 = 2, beta1 = 3) {
+  
+  sim_data = 
+    tibble(
+      x = rnorm(n, mean = 1, sd = 1),
+      y = beta0 + beta1 * x + rnorm(n, 0, 1)
+    )
+  
+  ls_fit = lm(y ~ x, data = sim_data)
+  
+  tibble(
+    beta0_hat = coef(ls_fit)[1],
+    beta1_hat = coef(ls_fit)[2]
+  )
+}
+
+sim_results_df = 
+  expand_grid(
+    sample_size = 30,
+    iter = 1:500
+  ) |> 
+  mutate(
+    estimate_df = map(sample_size, sim_regression)
+  ) |> 
+  unnest(estimate_df)
+
+sim_results_df |> 
+  ggplot(aes(x = beta0_hat))+
+  geom_histogram()
+
+sim_results_df |> 
+  ggplot(aes(x = beta0_hat, y = beta1_hat)) + 
+  geom_point()
 ```
 
